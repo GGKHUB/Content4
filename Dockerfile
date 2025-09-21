@@ -9,8 +9,8 @@ COPY package*.json ./
 COPY client/package*.json ./client/
 
 # Install dependencies
-RUN npm ci --only=production
-RUN cd client && npm ci --only=production
+RUN npm install --omit=dev
+RUN cd client && npm install --omit=dev
 
 # Copy source code
 COPY . .
@@ -28,10 +28,10 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
+RUN npm install --omit=dev && npm cache clean --force
 
 # Copy built Angular app to server
-COPY --from=builder /app/client/dist/car-enthusiasts-client ./client/dist
+COPY --from=builder /app/client/dist ./client/dist
 
 # Copy server files
 COPY server/ ./server/
