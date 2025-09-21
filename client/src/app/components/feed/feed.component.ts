@@ -14,7 +14,7 @@ import { AuthService } from '../../services/auth.service';
     <div class="feed-container">
       <div class="container">
         <div class="feed-header">
-          <h1><i class="fas fa-home"></i> Car Enthusiasts Feed</h1>
+          <h1><i class="fas fa-home"></i> AUTOGRAPHY Feed</h1>
           <a routerLink="/create-post" class="btn btn-primary">
             <i class="fas fa-plus"></i>
             Create Post
@@ -46,7 +46,12 @@ import { AuthService } from '../../services/auth.service';
               
               <div class="post-content">
                 <p class="post-caption" *ngIf="post.caption">{{ post.caption }}</p>
-                <img [src]="getImageUrl(post.imageUrl)" [alt]="post.caption" class="post-image">
+                <div class="image-container" (dblclick)="onImageDoubleClick(post)">
+                  <img [src]="getImageUrl(post.imageUrl)" [alt]="post.caption" class="post-image">
+                  <div class="like-animation" [class.active]="post.showLikeAnimation">
+                    <i class="fas fa-heart"></i>
+                  </div>
+                </div>
               </div>
               
               <div class="post-actions">
@@ -278,10 +283,55 @@ import { AuthService } from '../../services/auth.service';
       color: #333;
     }
     
+    .image-container {
+      position: relative;
+      overflow: hidden;
+    }
+
     .post-image {
       width: 100%;
       height: auto;
       display: block;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .post-image:hover {
+      transform: scale(1.02);
+    }
+
+    .like-animation {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-size: 60px;
+      color: #e74c3c;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0;
+      transition: all 0.6s ease;
+    }
+
+    .like-animation.active {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+      animation: heartBeat 0.6s ease-out;
+    }
+
+    @keyframes heartBeat {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0;
+      }
     }
     
     .post-actions {
@@ -549,7 +599,7 @@ import { AuthService } from '../../services/auth.service';
   `]
 })
 export class FeedComponent implements OnInit {
-  posts: (Post & { showComments: boolean; showLikers: boolean })[] = [];
+  posts: (Post & { showComments: boolean; showLikers: boolean; showLikeAnimation: boolean })[] = [];
   isLoading = true;
   newComments: { [postId: string]: string } = {};
 
@@ -566,7 +616,14 @@ export class FeedComponent implements OnInit {
   loadPosts(): void {
     this.postService.getAllPosts().subscribe({
       next: (posts: Post[]) => {
-        this.posts = posts.map(post => ({ ...post, showComments: false, showLikers: false }));
+        console.log('📱 Posts received from API:', posts);
+        console.log('📱 First post user data:', posts[0]?.userId);
+        this.posts = posts.map(post => ({ 
+          ...post, 
+          showComments: false, 
+          showLikers: false,
+          showLikeAnimation: false
+        }));
         this.isLoading = false;
       },
       error: (error: any) => {
@@ -591,6 +648,19 @@ export class FeedComponent implements OnInit {
         alert('Failed to like/unlike post. Please try again.');
       }
     });
+  }
+
+  onImageDoubleClick(post: Post & { showLikeAnimation: boolean }): void {
+    // Trigger the like animation
+    post.showLikeAnimation = true;
+    
+    // Call the toggle like function
+    this.toggleLike(post);
+    
+    // Hide the animation after 1 second
+    setTimeout(() => {
+      post.showLikeAnimation = false;
+    }, 1000);
   }
 
   toggleComments(post: Post & { showComments: boolean }): void {
@@ -627,10 +697,13 @@ export class FeedComponent implements OnInit {
   }
 
   getImageUrl(imageUrl: string): string {
+    console.log('🔍 getImageUrl called with:', imageUrl);
     if (imageUrl.startsWith('http')) {
       return imageUrl;
     }
-    return `http://localhost:5000${imageUrl}`;
+    const fullUrl = `http://localhost:5000${imageUrl}`;
+    console.log('🔍 Returning full URL:', fullUrl);
+    return fullUrl;
   }
 
   viewUserProfile(userId: number): void {

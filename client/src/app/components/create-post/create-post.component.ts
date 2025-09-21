@@ -411,7 +411,20 @@ export class CreatePostComponent {
       },
       error: (error: any) => {
         this.isLoading = false;
-        this.errorMessage = error.error?.message || 'Failed to create post. Please try again.';
+        console.error('Create post error:', error);
+        
+        // Handle specific error cases
+        if (error.status === 400) {
+          this.errorMessage = error.error?.message || 'Invalid request. Please check your file and try again.';
+        } else if (error.status === 401) {
+          this.errorMessage = 'Please log in to create a post.';
+        } else if (error.status === 413) {
+          this.errorMessage = 'File too large. Please select a smaller image.';
+        } else if (error.status === 0) {
+          this.errorMessage = 'Unable to connect to server. Please check your connection.';
+        } else {
+          this.errorMessage = error.error?.message || 'Failed to create post. Please try again.';
+        }
       }
     });
   }

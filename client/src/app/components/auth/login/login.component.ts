@@ -10,11 +10,12 @@ import { AuthService } from '../../../services/auth.service';
   imports: [CommonModule, FormsModule, RouterModule],
   template: `
     <div class="auth-container">
+      <div class="background-image"></div>
       <div class="auth-card">
         <div class="auth-header">
           <i class="fas fa-car"></i>
           <h1>Welcome Back</h1>
-          <p>Sign in to your Car Enthusiasts account</p>
+          <p>Sign in to your AUTOGRAPHY account</p>
         </div>
         
         <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
@@ -87,6 +88,22 @@ import { AuthService } from '../../../services/auth.service';
       justify-content: center;
       background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
       padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .background-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('http://localhost:5000/uploads/1758471393909-502691935-Generated Image September 16, 2025 - 11_24PM.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0.3;
+      z-index: 1;
     }
     
     .auth-card {
@@ -96,6 +113,8 @@ import { AuthService } from '../../../services/auth.service';
       padding: 40px;
       width: 100%;
       max-width: 400px;
+      position: relative;
+      z-index: 2;
     }
     
     .auth-header {

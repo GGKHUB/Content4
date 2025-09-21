@@ -18,12 +18,45 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static('uploads'));
+
+// Serve static files from Angular build in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+}
+
+// Static file serving with error handling
+app.use('/uploads', (req, res, next) => {
+  const fs = require('fs');
+  const path = require('path');
+  
+  // Decode the URL-encoded filename
+  const decodedPath = decodeURIComponent(req.path);
+  const filePath = path.join(__dirname, 'uploads', decodedPath);
+  
+  console.log(`🔍 Looking for file: ${decodedPath}`);
+  console.log(`🔍 Full path: ${filePath}`);
+  
+  // Check if file exists
+  if (fs.existsSync(filePath)) {
+    console.log(`✅ File found: ${decodedPath}`);
+    // File exists, serve it
+    express.static(path.join(__dirname, 'uploads'))(req, res, next);
+  } else {
+    // File doesn't exist, return 404 with a default image or error
+    console.log(`⚠️  File not found: ${decodedPath}`);
+    console.log(`⚠️  Full path: ${filePath}`);
+    res.status(404).json({ 
+      message: 'Image not found',
+      error: 'File not found',
+      path: decodedPath 
+    });
+  }
+});
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, path.join(__dirname, 'uploads'));
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -34,7 +67,7 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit
+    fileSize: 10 * 1024 * 1024 // 10MB limit to match frontend
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
@@ -339,16 +372,32 @@ app.get('/api/posts', async (req, res) => {
     // Transform the data to match frontend expectations
     const transformedPosts = posts.map(post => ({
       ...post.toJSON(),
-      userId: post.user, // Move user data to userId field
+      userId: post.user ? {
+        id: post.user.id,
+        username: post.user.username,
+        firstName: post.user.firstName,
+        lastName: post.user.lastName,
+        profilePicture: post.user.profilePicture
+      } : null, // Move user data to userId field
       user: undefined, // Remove the original user field
       likes: post.likes.map(like => ({
         ...like.toJSON(),
-        ...like.user.toJSON(), // Flatten user data into like object
+        id: like.user.id,
+        username: like.user.username,
+        firstName: like.user.firstName,
+        lastName: like.user.lastName,
+        profilePicture: like.user.profilePicture,
         user: undefined // Remove the nested user field
       })),
       comments: post.comments.map(comment => ({
         ...comment.toJSON(),
-        userId: comment.user.toJSON(), // Move user data to userId field
+        userId: {
+          id: comment.user.id,
+          username: comment.user.username,
+          firstName: comment.user.firstName,
+          lastName: comment.user.lastName,
+          profilePicture: comment.user.profilePicture
+        }, // Move user data to userId field
         user: undefined // Remove the nested user field
       }))
     }));
@@ -401,16 +450,32 @@ app.get('/api/posts/user/:userId', async (req, res) => {
     // Transform the data to match frontend expectations
     const transformedPosts = posts.map(post => ({
       ...post.toJSON(),
-      userId: post.user, // Move user data to userId field
+      userId: post.user ? {
+        id: post.user.id,
+        username: post.user.username,
+        firstName: post.user.firstName,
+        lastName: post.user.lastName,
+        profilePicture: post.user.profilePicture
+      } : null, // Move user data to userId field
       user: undefined, // Remove the original user field
       likes: post.likes.map(like => ({
         ...like.toJSON(),
-        ...like.user.toJSON(), // Flatten user data into like object
+        id: like.user.id,
+        username: like.user.username,
+        firstName: like.user.firstName,
+        lastName: like.user.lastName,
+        profilePicture: like.user.profilePicture,
         user: undefined // Remove the nested user field
       })),
       comments: post.comments.map(comment => ({
         ...comment.toJSON(),
-        userId: comment.user.toJSON(), // Move user data to userId field
+        userId: {
+          id: comment.user.id,
+          username: comment.user.username,
+          firstName: comment.user.firstName,
+          lastName: comment.user.lastName,
+          profilePicture: comment.user.profilePicture
+        }, // Move user data to userId field
         user: undefined // Remove the nested user field
       }))
     }));
@@ -425,18 +490,27 @@ app.get('/api/posts/user/:userId', async (req, res) => {
 // Create post
 app.post('/api/posts', authenticateToken, upload.single('image'), async (req, res) => {
   try {
+    console.log('📤 POST /api/posts - Request received');
+    console.log('📤 File info:', req.file ? `Filename: ${req.file.filename}, Size: ${req.file.size}` : 'No file');
+    console.log('📤 Body info:', { caption: req.body.caption, userId: req.user?.userId });
+    
     if (!req.file) {
+      console.log('❌ No image uploaded');
       return res.status(400).json({ message: 'No image uploaded' });
     }
 
     const { caption } = req.body;
     const imageUrl = `/uploads/${req.file.filename}`;
 
+    console.log('📤 Creating post with:', { userId: req.user.userId, caption, imageUrl });
+    
     const post = await Post.create({
       userId: req.user.userId,
       caption: caption || '',
       imageUrl: imageUrl
     });
+    
+    console.log('✅ Post created successfully with ID:', post.id);
 
     // Fetch the created post with associations
     const createdPost = await Post.findByPk(post.id, {
@@ -474,16 +548,32 @@ app.post('/api/posts', authenticateToken, upload.single('image'), async (req, re
     // Transform the data to match frontend expectations
     const transformedPost = {
       ...createdPost.toJSON(),
-      userId: createdPost.user, // Move user data to userId field
+      userId: createdPost.user ? {
+        id: createdPost.user.id,
+        username: createdPost.user.username,
+        firstName: createdPost.user.firstName,
+        lastName: createdPost.user.lastName,
+        profilePicture: createdPost.user.profilePicture
+      } : null, // Move user data to userId field
       user: undefined, // Remove the original user field
       likes: createdPost.likes.map(like => ({
         ...like.toJSON(),
-        ...like.user, // Flatten user data into like object
+        id: like.user.id,
+        username: like.user.username,
+        firstName: like.user.firstName,
+        lastName: like.user.lastName,
+        profilePicture: like.user.profilePicture,
         user: undefined // Remove the nested user field
       })),
       comments: createdPost.comments.map(comment => ({
         ...comment.toJSON(),
-        userId: comment.user, // Move user data to userId field
+        userId: {
+          id: comment.user.id,
+          username: comment.user.username,
+          firstName: comment.user.firstName,
+          lastName: comment.user.lastName,
+          profilePicture: comment.user.profilePicture
+        }, // Move user data to userId field
         user: undefined // Remove the nested user field
       }))
     };
@@ -493,7 +583,14 @@ app.post('/api/posts', authenticateToken, upload.single('image'), async (req, re
       post: transformedPost
     });
   } catch (error) {
-    console.error('Create post error:', error);
+    console.error('❌ Create post error:', error);
+    console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error details:', {
+      message: error.message,
+      code: error.code,
+      errno: error.errno,
+      sqlState: error.sqlState
+    });
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -587,7 +684,13 @@ app.post('/api/posts/:postId/comments', authenticateToken, [
     // Transform comment data to match frontend expectations
     const transformedComment = {
       ...commentWithUser.toJSON(),
-      userId: commentWithUser.user.toJSON(),
+      userId: {
+        id: commentWithUser.user.id,
+        username: commentWithUser.user.username,
+        firstName: commentWithUser.user.firstName,
+        lastName: commentWithUser.user.lastName,
+        profilePicture: commentWithUser.user.profilePicture
+      },
       user: undefined // Remove the nested user field
     };
 
@@ -619,13 +722,35 @@ app.get('/api/users/:userId', authenticateToken, async (req, res) => {
   }
 });
 
+// Serve Angular app for all non-API routes in production
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  });
+}
+
 // Error handling middleware
 app.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ message: 'File too large. Maximum size is 5MB.' });
+      return res.status(400).json({ message: 'File too large. Maximum size is 10MB.' });
+    }
+    if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({ message: 'Unexpected field in file upload.' });
     }
   }
+  
+  // Handle file system errors (like ENOENT - file not found)
+  if (error.code === 'ENOENT') {
+    console.log(`⚠️  File not found: ${error.path}`);
+    return res.status(404).json({ 
+      message: 'File not found',
+      error: 'The requested file does not exist',
+      path: error.path 
+    });
+  }
+  
+  console.error('Server error:', error);
   res.status(500).json({ message: 'Server error', error: error.message });
 });
 

@@ -13,7 +13,7 @@ import { AuthService, User } from '../../services/auth.service';
         <div class="header-content">
           <div class="logo">
             <i class="fas fa-car"></i>
-            <span>Car Enthusiasts</span>
+            <span>AUTOGRAPHY</span>
           </div>
           
           <nav class="nav" *ngIf="currentUser">

@@ -58,7 +58,12 @@ import { AuthService } from '../../services/auth.service';
             
             <div class="posts-grid" *ngIf="!isLoading && userPosts.length > 0">
               <div class="post-card" *ngFor="let post of userPosts" (click)="viewPost(post)">
-                <img [src]="getImageUrl(post.imageUrl)" [alt]="post.caption" class="post-thumbnail">
+                <div class="image-container" (dblclick)="onImageDoubleClick(post); $event.stopPropagation()">
+                  <img [src]="getImageUrl(post.imageUrl)" [alt]="post.caption" class="post-thumbnail">
+                  <div class="like-animation" [class.active]="post.showLikeAnimation">
+                    <i class="fas fa-heart"></i>
+                  </div>
+                </div>
                 <div class="post-overlay">
                   <div class="post-stats">
                     <span><i class="fas fa-heart"></i> {{ post.likes.length }}</span>
@@ -210,10 +215,55 @@ import { AuthService } from '../../services/auth.service';
       transform: translateY(-5px);
     }
     
+    .image-container {
+      position: relative;
+      overflow: hidden;
+    }
+
     .post-thumbnail {
       width: 100%;
       height: 200px;
       object-fit: cover;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .post-thumbnail:hover {
+      transform: scale(1.02);
+    }
+
+    .like-animation {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-size: 40px;
+      color: #e74c3c;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0;
+      transition: all 0.6s ease;
+    }
+
+    .like-animation.active {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+      animation: heartBeat 0.6s ease-out;
+    }
+
+    @keyframes heartBeat {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0;
+      }
     }
     
     .post-overlay {
@@ -298,7 +348,7 @@ import { AuthService } from '../../services/auth.service';
 })
 export class UserProfileComponent implements OnInit {
   userProfile: any = null;
-  userPosts: Post[] = [];
+  userPosts: (Post & { showLikeAnimation: boolean })[] = [];
   isLoading = true;
   totalLikes = 0;
 
@@ -334,7 +384,10 @@ export class UserProfileComponent implements OnInit {
   loadUserPosts(userId: string): void {
     this.postService.getUserPosts(parseInt(userId)).subscribe({
       next: (posts: Post[]) => {
-        this.userPosts = posts;
+        this.userPosts = posts.map(post => ({
+          ...post,
+          showLikeAnimation: false
+        }));
         this.totalLikes = posts.reduce((total, post) => total + post.likes.length, 0);
         
         // Extract user info from the first post
@@ -378,6 +431,44 @@ export class UserProfileComponent implements OnInit {
     // For now, just go back to feed
     // In a real app, you might have a detailed post view
     this.router.navigate(['/feed']);
+  }
+
+  onImageDoubleClick(post: Post & { showLikeAnimation: boolean }): void {
+    // Trigger the like animation
+    post.showLikeAnimation = true;
+    
+    // Call the toggle like function
+    this.toggleLike(post);
+    
+    // Hide the animation after 1 second
+    setTimeout(() => {
+      post.showLikeAnimation = false;
+    }, 1000);
+  }
+
+  toggleLike(post: Post): void {
+    this.postService.likePost(post.id).subscribe({
+      next: (response: any) => {
+        // Update the likes array in the local posts array
+        const postIndex = this.userPosts.findIndex(p => p.id === post.id);
+        if (postIndex !== -1) {
+          this.userPosts[postIndex].likes = response.likes || [];
+          // Recalculate total likes
+          this.totalLikes = this.userPosts.reduce((total, p) => total + p.likes.length, 0);
+        }
+      },
+      error: (error: any) => {
+        console.error('Error toggling like:', error);
+        // Show error message to user
+        alert('Failed to like/unlike post. Please try again.');
+      }
+    });
+  }
+
+  isLiked(post: Post): boolean {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) return false;
+    return post.likes.some(like => like.id === currentUser.id);
   }
 
   goBack(): void {

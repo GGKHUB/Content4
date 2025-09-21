@@ -10,10 +10,11 @@ import { AuthService } from '../../../services/auth.service';
   imports: [CommonModule, FormsModule, RouterModule],
   template: `
     <div class="auth-container">
+      <div class="background-image"></div>
       <div class="auth-card">
         <div class="auth-header">
           <i class="fas fa-car"></i>
-          <h1>Join Car Enthusiasts</h1>
+          <h1>Join AUTOGRAPHY</h1>
           <p>Create your account and start sharing your passion</p>
         </div>
         
@@ -128,10 +129,28 @@ import { AuthService } from '../../../services/auth.service';
       justify-content: center;
       background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
       padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .background-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('http://localhost:5000/uploads/1758471393909-502691935-Generated Image September 16, 2025 - 11_24PM.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      opacity: 0.3;
+      z-index: 1;
     }
     
     .auth-card {
       background: white;
+      position: relative;
+      z-index: 2;
       border-radius: 16px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
       padding: 40px;

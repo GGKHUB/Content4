@@ -63,7 +63,11 @@ export class PostService {
   }
 
   createPost(formData: FormData): Observable<any> {
-    const headers = this.getAuthHeadersForFormData();
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+      // Don't set Content-Type for FormData - let browser set it with boundary
+    });
     return this.http.post(`${this.apiUrl}/posts`, formData, { headers });
   }
 
