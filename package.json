@@ -1,46 +1,13 @@
 {
-  "name": "car-enthusiasts-social",
+  "name": "car-enthusiasts-static",
   "version": "1.0.0",
-  "description": "A social media application for automobile enthusiasts",
-  "main": "server/index.js",
+  "description": "Car Enthusiasts App - Static Version",
+  "main": "docs/index.html",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "nodemon server/index.js",
-    "client": "cd client && ng serve",
-    "build": "cd client && ng build --configuration production",
-    "build:dev": "cd client && ng build",
-    "install-all": "npm install && cd client && npm install",
-    "init-db": "node server/scripts/initDatabase.js",
-    "start": "node server/index.js",
-    "postinstall": "cd client && npm install && npm run build"
+    "start": "echo 'Static site - no server needed'",
+    "build": "echo 'Static site - no build needed'"
   },
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "express-validator": "^7.0.1",
-    "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1",
-    "pg": "^8.11.3",
-    "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.7",
-    "sqlite3": "^5.1.7"
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.0",
-    "nodemon": "^3.0.1"
-  },
-  "keywords": [
-    "social-media",
-    "automobile",
-    "cars",
-    "enthusiasts"
-  ],
-  "author": "AUTOGRAPHY Team",
-  "license": "MIT",
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=16.0.0"
   }
 }

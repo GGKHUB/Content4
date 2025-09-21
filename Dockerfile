@@ -1,32 +1,20 @@
-# Use Node.js 20 Alpine
-FROM node:20-alpine
+# Static-only Dockerfile - no build needed
+FROM nginx:alpine
 
-# Set working directory
-WORKDIR /app
+# Copy static files
+COPY docs/index.html /usr/share/nginx/html/index.html
 
-# Copy package files
-COPY package*.json ./
-COPY client/package*.json ./client/
+# Create nginx config
+RUN echo 'server { \
+    listen 80; \
+    server_name localhost; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
 
-# Install all dependencies (including dev for build)
-RUN npm install
-RUN cd client && npm install
+EXPOSE 80
 
-# Copy source code
-COPY . .
-
-# Build Angular application
-RUN cd client && npm run build --configuration production
-
-# Create uploads directory
-RUN mkdir -p ./server/uploads
-
-# Expose port
-EXPOSE 5000
-
-# Set environment variables
-ENV NODE_ENV=production
-ENV PORT=5000
-
-# Start the application
-CMD ["node", "server/index.js"]
+CMD ["nginx", "-g", "daemon off;"]
