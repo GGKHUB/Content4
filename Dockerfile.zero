@@ -1,0 +1,23 @@
+# Zero-build Dockerfile - no Angular build needed
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy only the simple server files
+COPY package-simple.json package.json
+COPY server-simple.js server.js
+COPY index.html ./
+COPY client/dist/ ./client/dist/
+
+# Install only the minimal dependencies
+RUN npm install
+
+# Create uploads directory
+RUN mkdir -p ./uploads
+
+EXPOSE 5000
+
+ENV NODE_ENV=production
+ENV PORT=5000
+
+CMD ["node", "server.js"]
