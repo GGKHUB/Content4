@@ -44,5 +44,9 @@
     "enthusiasts"
   ],
   "author": "AUTOGRAPHY Team",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
 }

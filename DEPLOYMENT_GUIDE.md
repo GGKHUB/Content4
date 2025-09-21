@@ -16,18 +16,25 @@ Railway is the easiest way to deploy your full-stack application with built-in d
 
 #### Step 1: Prepare Your Repository
 
-1. **Push your code to GitHub** (if not already done):
+1. **Update dependencies and lock file**:
+   ```bash
+   npm install
+   ```
+
+2. **Push your code to GitHub** (if not already done):
    ```bash
    git add .
    git commit -m "Add deployment configuration"
    git push origin main
    ```
 
-2. **Verify all deployment files are present**:
-   - ✅ `Dockerfile`
+3. **Verify all deployment files are present**:
+   - ✅ `Dockerfile` (Node.js 20)
    - ✅ `railway.json`
    - ✅ `ecosystem.config.js`
    - ✅ `env.example`
+   - ✅ `.nvmrc` (Node.js version)
+   - ✅ `package-lock.json` (updated)
 
 #### Step 2: Deploy to Railway
 
@@ -155,28 +162,56 @@ Before going live, ensure:
 
 ### Common Issues:
 
-1. **Build fails**:
-   - Check `package.json` dependencies
-   - Ensure all files are committed to git
+1. **Node.js version errors**:
+   - ✅ **Fixed**: Updated to Node.js 20 in Dockerfile
+   - ✅ **Fixed**: Added `.nvmrc` file
+   - ✅ **Fixed**: Added engine requirements
 
-2. **Database connection fails**:
+2. **Package lock file out of sync**:
+   - Run `npm install` locally to update `package-lock.json`
+   - Commit and push the updated lock file
+
+3. **Build fails**:
+   - ✅ **Fixed**: Updated Angular build budgets
+   - ✅ **Fixed**: Corrected build commands
+   - Check `package.json` dependencies
+
+4. **Database connection fails**:
    - Verify `DATABASE_URL` is correct
    - Check database service is running
+   - Ensure PostgreSQL is selected (not SQLite)
 
-3. **App doesn't load**:
+5. **App doesn't load**:
    - Check environment variables
    - Verify build completed successfully
    - Check logs for errors
+   - ✅ **Fixed**: Added static file serving
 
-4. **File uploads not working**:
+6. **File uploads not working**:
    - Ensure uploads directory exists
-   - Check file size limits
+   - Check file size limits (10MB)
    - Verify multer configuration
+
+### Quick Fixes:
+
+```bash
+# 1. Update dependencies
+npm install
+
+# 2. Test build locally
+npm run build
+
+# 3. Commit and push
+git add .
+git commit -m "Fix deployment issues"
+git push origin main
+```
 
 ### Getting Help:
 
 - **Railway**: [Railway Discord](https://discord.gg/railway)
 - **Render**: [Render Community](https://community.render.com)
+- **Detailed Guide**: See `DEPLOYMENT_TROUBLESHOOTING.md`
 - **General**: Check application logs first
 
 ## 🎉 Success!

@@ -1,5 +1,5 @@
 # Multi-stage build for production
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Set working directory
 WORKDIR /app
@@ -16,10 +16,10 @@ RUN cd client && npm ci --only=production
 COPY . .
 
 # Build Angular application
-RUN cd client && npm run build --prod
+RUN cd client && npm run build --configuration production
 
 # Production stage
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production
 
 # Set working directory
 WORKDIR /app
