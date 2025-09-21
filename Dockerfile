@@ -1,5 +1,5 @@
-# Multi-stage build for production
-FROM node:20-alpine AS builder
+# Use Node.js 20 Alpine
+FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
@@ -8,9 +8,9 @@ WORKDIR /app
 COPY package*.json ./
 COPY client/package*.json ./client/
 
-# Install dependencies
-RUN npm install --omit=dev
-RUN cd client && npm install --omit=dev
+# Install all dependencies (including dev for build)
+RUN npm install
+RUN cd client && npm install
 
 # Copy source code
 COPY . .
@@ -18,26 +18,7 @@ COPY . .
 # Build Angular application
 RUN cd client && npm run build --configuration production
 
-# Production stage
-FROM node:20-alpine AS production
-
-# Set working directory
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install only production dependencies
-RUN npm install --omit=dev && npm cache clean --force
-
-# Copy built Angular app to server
-COPY --from=builder /app/client/dist ./client/dist
-
-# Copy server files
-COPY server/ ./server/
-COPY --from=builder /app/server/uploads ./server/uploads
-
-# Create uploads directory if it doesn't exist
+# Create uploads directory
 RUN mkdir -p ./server/uploads
 
 # Expose port

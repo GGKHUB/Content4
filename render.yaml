@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: car-enthusiasts-app
+    env: node
+    buildCommand: npm install && cd client && npm install && npm run build --configuration production
+    startCommand: node server/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_TYPE
+        value: postgresql
+    disk:
+      name: uploads
+      mountPath: /app/server/uploads
+      sizeGB: 1
