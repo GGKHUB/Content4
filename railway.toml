@@ -1,12 +1,7 @@
 [build]
-builder = "DOCKERFILE"
-dockerfilePath = "Dockerfile"
+builder = "NIXPACKS"
 
 [deploy]
-startCommand = "node server/index.js"
+startCommand = "echo 'Static site - no server needed'"
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
-
-[environments.production.variables]
-NODE_ENV = "production"
-NODE_VERSION = "20"
