@@ -12,9 +12,7 @@
     "install-all": "npm install && cd client && npm install",
     "init-db": "node server/scripts/initDatabase.js",
     "start": "node server/index.js",
-    "start:pm2": "pm2 start ecosystem.config.js --env production",
-    "stop:pm2": "pm2 stop car-enthusiasts-app",
-    "restart:pm2": "pm2 restart car-enthusiasts-app"
+    "postinstall": "cd client && npm install && npm run build"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -31,8 +29,7 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.0",
-    "nodemon": "^3.0.1",
-    "pm2": "^5.3.0"
+    "nodemon": "^3.0.1"
   },
   "keywords": [
     "social-media",
@@ -43,7 +40,7 @@
   "author": "AUTOGRAPHY Team",
   "license": "MIT",
   "engines": {
-    "node": ">=20.0.0",
-    "npm": ">=10.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   }
 }
